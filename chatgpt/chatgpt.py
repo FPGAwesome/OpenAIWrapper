@@ -1,4 +1,5 @@
 # Taken from https://til.simonwillison.net/gpt3/chatgpt-api
+import csv
 import openai
 
 class ChatGPT:
@@ -27,3 +28,13 @@ class ChatGPT:
         if self.verbose>0:
             print(completion.usage)
         return completion.choices[0].message.content
+    
+    def print_history(self):
+        for i,h in enumerate(self.messages):
+            print(i,h)
+
+    def dump_history(self,filename='whisper_history.csv'):
+        with open(filename,'w') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',')
+            for i,h in enumerate(self.messages):
+                csvwriter.writerow([i,h])
