@@ -35,6 +35,10 @@
       cursor: pointer;
     }
 
+    .message { white-space: pre-wrap; }
+
+    .message-row .message code { white-space: pre-wrap; background-color: #f7f7f9; border: 1px solid #ccc; border-radius: 3px; display: inline-block; padding: 0.2em 0.4em; font-size: 90%; } 
+
     .message-row {
       margin-bottom: 10px;
     }
@@ -84,7 +88,6 @@
         var row = $('<div class="row message-row"></div>').append(message).append(timestamp);
         $('#chat-window').append(row);
         scrollToBottom();
-        $('#user-message').val('');  // Clear input box
         $('#send-btn').removeAttr('disabled');  // Re-enable send button
       }
 
@@ -95,6 +98,7 @@
         var message = $('<div class="message user-message"></div>').text(text);
         var timestamp = $('<span class="timestamp"></span>').text(getFormattedTime());
         var row = $('<div class="row message-row"></div>').append(message).append(timestamp);
+        $('#user-message').val('');  // Clear input box
         $('#chat-window').append(row);
         scrollToBottom();
         $('#send-btn').attr('disabled', 'disabled');  // Disable send button
