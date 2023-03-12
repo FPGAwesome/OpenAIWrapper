@@ -7,7 +7,7 @@ from chatgpt import chatgpt
 
 app = Flask(__name__)
 starting_prompt="You are a chatbot providing technical help for web development. Stay very concise, every token costs me money."
-chattest = chatgpt.ChatGPT(starting_prompt,verbose=0)
+chattest = chatgpt.ChatGPT(starting_prompt,verbose=1)
 
 # Route to render the chat window template
 @app.route('/')
@@ -20,6 +20,30 @@ def chatbot_call():
     message = request.form['message']
     response = chattest(message)
     return {'response': response}
+
+# Route to handle saving chat messages
+@app.route('/save_messages', methods=['POST'])
+def save_messages():
+    file = request.form['filename']
+    
+    # Save the chat history
+    chattest.save_chat(file)
+    
+    return render_template('chat_window.html')
+
+
+# Route to handle loading chat messages
+@app.route('/load_messages', methods=['POST'])
+def load_messages():
+    file = request.files['file']
+    
+    # Load the file from disk
+    file_contents = file.read()
+    
+    # Load the chat history
+    chattest.load_chat(file_contents)
+    
+    messages = chattest.messages[-100:]
 
 if __name__ == '__main__':
     app.run(debug=True)

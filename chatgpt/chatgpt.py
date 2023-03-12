@@ -1,6 +1,7 @@
 # Taken from https://til.simonwillison.net/gpt3/chatgpt-api
 import csv
 import openai
+import pickle
 import tiktoken
 
 class ChatGPT:
@@ -46,6 +47,15 @@ class ChatGPT:
             csvwriter = csv.writer(csvfile, delimiter=',')
             for i,h in enumerate(self.messages):
                 csvwriter.writerow([i,h])
+
+    # delicious pickles, until I implment some db solution
+    def save_chat(self,filename='saved_chat.pkl'):
+        with open(filename, 'wb') as f:
+            pickle.dump(self.messages, f)
+
+    def load_chat(self,filename='saved_chat.pkl'):
+        with open(filename, 'wb') as f:
+            self.messages=pickle.load(f)
 
     # Make the model we use for encoding overridable because that sounds
     # cool to do. Not going to support get_encoding at this time because
