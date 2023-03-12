@@ -5,6 +5,8 @@
 from flask import Flask, render_template, request
 from chatgpt import chatgpt
 
+import os
+
 app = Flask(__name__)
 starting_prompt="You are a chatbot providing technical help for web development. Stay very concise, every token costs me money."
 chattest = chatgpt.ChatGPT(starting_prompt,verbose=1)
@@ -25,9 +27,12 @@ def chatbot_call():
 @app.route('/save_messages', methods=['POST'])
 def save_messages():
     file = request.form['filename']
+
+    if not os.path.exists('temp'):
+        os.makedirs('temp')
     
     # Save the chat history
-    chattest.save_chat(file)
+    chattest.save_chat(os.path.join('temp',file))
     
     return render_template('chat_window.html')
 
