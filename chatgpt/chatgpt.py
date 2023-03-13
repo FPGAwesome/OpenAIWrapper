@@ -1,4 +1,4 @@
-# Taken from https://til.simonwillison.net/gpt3/chatgpt-api
+# Adapted (previously taken, but it's going through a bit of tailoring) from https://til.simonwillison.net/gpt3/chatgpt-api
 import csv
 import openai
 import pickle
@@ -8,28 +8,51 @@ class ChatGPT:
     def __init__(self, system="", verbose=0, model="gpt-3.5-turbo"):
         self.system = system
         self.messages = []
-        if self.system:
-            self.messages.append({"role": "system", "content": system})
-        self.verbose=verbose
-
-        # Model-related variables
+        self.message_tokens = [] # token usage of given index
 
         self.model=model
         # for some token counting utility
         self.encoding=tiktoken.encoding_for_model(model)
+
+        self.verbose=verbose
+
+        if self.system:
+            self.messages.append({"role": "system", "content": system})
+            self.message_tokens.append(self.count_tokens(system))
+
+
+        # Model-related variables
+
+        
     
     def __call__(self, message):
+        print(message)
+        print(self.count_tokens(message))
+        self.message_tokens.append(self.count_tokens(message))
         self.messages.append({"role": "user", "content": message})
         result = self.execute()
         self.messages.append({"role": "assistant", "content": result})
+        if self.verbose > 1:
+            print(self.messages)
+            print(self.message_tokens)
         return result
     
+    # Make sure we're only sending a maximum of 4097 tokens
+    # this is a private method unless there's some utility I'm missing?
+    # Maybe something for UI's idk at the moment
+    def __token_trim(self,message):
+        tot_tokens=sum(self.message_tokens)
+        print('Sum of tokens: ', tot_tokens)
+        return message
+
+
     # can call different models, for these purposes it's really only useful
     # to use the two different available chatgpt models
     # gpt-3.5-turbo and gpt-3.5-turbo-0301
     # the latter of which doesn't pay strong attention to system messages in favor of the user prompts
     def execute(self):
-        completion = openai.ChatCompletion.create(model=self.model, messages=self.messages)
+        send_message=self.__token_trim(self.messages)
+        completion = openai.ChatCompletion.create(model=self.model, messages=send_message)
         # Uncomment this to print out token usage each time, e.g.
         # {"completion_tokens": 86, "prompt_tokens": 26, "total_tokens": 112}
         if self.verbose>0:

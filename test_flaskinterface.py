@@ -8,7 +8,7 @@ from chatgpt import chatgpt
 import os
 
 app = Flask(__name__)
-starting_prompt="You are a chatbot providing technical help for web development. Stay very concise, every token costs me money."
+starting_prompt=" Stay very concise, every token costs me money."
 chattest = chatgpt.ChatGPT(starting_prompt,verbose=1)
 
 # Route to render the chat window template
