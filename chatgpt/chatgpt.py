@@ -30,13 +30,11 @@ class ChatGPT:
     
     def __call__(self, message):
         print(message)
-        print(self.count_tokens(message))
         self.message_tokens.append(len(self.encoding.encode(message)))
         self.messages.append({"role": "user", "content": message})
         result = self.execute()
         self.message_tokens.append(len(self.encoding.encode(result)))
         self.messages.append({"role": "assistant", "content": result})
-        print('count tokens: ', self.count_tokens())
         if self.verbose > 1:
             print(self.messages)
             print(self.message_tokens)
@@ -45,10 +43,10 @@ class ChatGPT:
     # Make sure we're only sending a maximum of 4097 tokens
     # this is a private method unless there's some utility I'm missing?
     # Maybe something for UI's idk at the moment
-    def __token_trim(self,message):
-        tot_tokens=sum(self.message_tokens)
+    def __token_trim(self, messages):
+        tot_tokens, msgs_to_use = self.count_tokens(messages,num_filter=512)
         print('Sum of tokens: ', tot_tokens)
-        return message
+        return msgs_to_use
 
 
     # can call different models, for these purposes it's really only useful
@@ -56,6 +54,7 @@ class ChatGPT:
     # gpt-3.5-turbo and gpt-3.5-turbo-0301
     # the latter of which doesn't pay strong attention to system messages in favor of the user prompts
     def execute(self):
+        print(self.messages)
         send_message=self.__token_trim(self.messages)
         completion = openai.ChatCompletion.create(model=self.model, messages=send_message)
         # Uncomment this to print out token usage each time, e.g.
@@ -88,30 +87,36 @@ class ChatGPT:
     # Make the model we use for encoding overridable because that sounds
     # cool to do. Not going to support get_encoding at this time because
     # I don't want or need it for anything
-    def count_tokens(self, msg=None, model=None):
-        encoding=self.encoding
-        if model != None:
-            encoding=tiktoken.encoding_for_model(model)
+    # num_filter is used for limiting sent tokens
+    def count_tokens(self, messages=None, model=None, num_filter=4096):
+        encoding = self.encoding
+        if model is not None:
+            encoding = tiktoken.encoding_for_model(model)
         else:
-            model=self.tikmodel #headache saver
-            
-        # borrowed from the openai cookbook github page, may not actually work
-        # testing against api token counts shows this works alright though
+            model = self.tikmodel
 
-        if model == "gpt-3.5-turbo":  # note: future models may deviate from this
-            num_tokens = 0
-            messages_count=self.messages.copy()
-            # For testing what a new message will add to the count
-            if msg is not None:
-                messages_count.append({"role": "user", "content": msg})
-            for message in messages_count:
-                num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+        if model == "gpt-3.5-turbo":
+            if messages is None:
+                messages = self.messages
+
+            num_tokens = 2 # there's an off by two error, this is the obvious fix
+                           # not like, figuring out why, or anything
+            msgs_to_use = []
+            for message in messages[::-1]:  # We'll go in reverse to keep the most recent messages
+                tokens_length = 4  # <im_start>{role/name}\n{content}<im_end>\n
                 for key, value in message.items():
-                    num_tokens += len(encoding.encode(value))
-                    if key == "name":  # if there's a name, the role is omitted
-                        num_tokens += -1  # role is always required and always 1 token
-            num_tokens += 2  # every reply is primed with <im_start>assistant
-            return num_tokens
+                    tokens_length += len(encoding.encode(value))
+                    if key == "name":
+                        tokens_length += -1
+
+                # Count tokens limit, with a 100 tokens margin for the assistant's message and request formatting
+                if num_tokens + tokens_length <= num_filter - 100:
+                    num_tokens += tokens_length
+                    msgs_to_use.append(message)
+                else:
+                    break
+
+            return num_tokens, msgs_to_use[::-1]
         else:
             raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
     See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
