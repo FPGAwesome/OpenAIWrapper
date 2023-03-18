@@ -19,10 +19,23 @@
   <!-- Chat window -->
   <div id="chat-window"></div>
 
+  <!-- Side panel to input system prompt -->
+  <button id="toggle-panel-btn">Toggle Panel</button>
+  <div id="side-panel">
+    
+    <div class="side-panel-content">
+      <form>
+        <label for="system-prompt"><b>System Prompt</b></label>
+        <input type="text" name="system-prompt" id="system-prompt" placeholder="Enter a system prompt...">
+        <button type="submit" id="submit-system-prompt-btn">Submit</button>
+      </form>
+    </div>
+  </div>
+
   <div style="background: rgb(46 73 105)">
   <!-- Chat form -->
     <form id="chat-form">
-      <textarea tabindex="0" style="max-height: 200px; max-width:800px; height: 100px" id="user-message"></textarea>
+      <textarea style="max-height: 200px; max-width:800px; height: 100px" id="user-message"></textarea>
       <input type="submit" id="send-btn" value="Send">
     </form>
 
@@ -33,8 +46,8 @@
       <button type="submit">Save Chat History</button>
     </form>
 
-    <form method="POST" action="/load_messages" enctype="multipart/form-data">
-      <input type="file" name="file" accept=".pkl">
+    <form id="load-chat-form" method="POST" action="/load_messages" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".json">
       <button type="submit">Load Chat History</button>
     </form>
   </div>

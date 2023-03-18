@@ -4,8 +4,60 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+#side-panel {
+    position: fixed;
+    top: 0;
+    right: -250px;
+    width: 250px;
+    height: 100%;
+    background-color: #f2f2f2;
+    z-index: 1;
+    transition: 0.5s;
+    overflow: hidden;
+  }
+  
+  #side-panel.open {
+    right: 0;
+  }
+  
+  #toggle-panel-btn {
+    position: absolute;
+    top: 10px;
+    right: 5px;
+    z-index: 2;
+  }
+  
+  .side-panel-content {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .side-panel-content input[type=text] {
+    width: 80%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  .side-panel-content button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .side-panel-content button:hover {
+    background-color: #45a049;
+  }
+
 #chat-window {
-    height: 600px;
+    height: 550px;
     overflow-y: scroll;
     border: 1px solid #383838;
     padding: 10px;

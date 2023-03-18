@@ -1,7 +1,7 @@
 # Adapted (previously taken, but it's going through a bit of tailoring) from https://til.simonwillison.net/gpt3/chatgpt-api
 import csv
 import openai
-import pickle
+import json
 import tiktoken
 
 class ChatGPT:
@@ -12,13 +12,16 @@ class ChatGPT:
 
         self.model=model
         # for some token counting utility
-        self.encoding=tiktoken.encoding_for_model(model)
+        self.tikmodel=self.model
+        if model=="gpt-4":
+            self.tikmodel="gpt-3.5-turbo" # until tiktoken works for gpt4
+        self.encoding=tiktoken.encoding_for_model(self.tikmodel)
 
         self.verbose=verbose
 
         if self.system:
             self.messages.append({"role": "system", "content": system})
-            self.message_tokens.append(self.count_tokens(system))
+            self.message_tokens.append(len(self.encoding.encode(system)))
 
 
         # Model-related variables
@@ -28,10 +31,12 @@ class ChatGPT:
     def __call__(self, message):
         print(message)
         print(self.count_tokens(message))
-        self.message_tokens.append(self.count_tokens(message))
+        self.message_tokens.append(len(self.encoding.encode(message)))
         self.messages.append({"role": "user", "content": message})
         result = self.execute()
+        self.message_tokens.append(len(self.encoding.encode(result)))
         self.messages.append({"role": "assistant", "content": result})
+        print('count tokens: ', self.count_tokens())
         if self.verbose > 1:
             print(self.messages)
             print(self.message_tokens)
@@ -72,23 +77,23 @@ class ChatGPT:
                 csvwriter.writerow([i,h])
 
     # delicious pickles, until I implment some db solution
-    def save_chat(self,filename='saved_chat.pkl'):
-        with open(filename, 'wb') as f:
-            pickle.dump(self.messages, f)
+    def save_chat(self, filename='saved_chat.json'):
+        with open(filename, 'w') as f:
+            json.dump(self.messages, f)
 
-    def load_chat(self,filename='saved_chat.pkl'):
-        with open(filename, 'wb') as f:
-            self.messages=pickle.load(f)
+    def load_chat(self, filename='saved_chat.json'):
+        with open(filename, 'r') as f:
+            self.messages = json.load(f)
 
     # Make the model we use for encoding overridable because that sounds
     # cool to do. Not going to support get_encoding at this time because
     # I don't want or need it for anything
-    def count_tokens(self, msg, model=None):
+    def count_tokens(self, msg=None, model=None):
         encoding=self.encoding
         if model != None:
             encoding=tiktoken.encoding_for_model(model)
         else:
-            model=self.model #headache saver
+            model=self.tikmodel #headache saver
             
         # borrowed from the openai cookbook github page, may not actually work
         # testing against api token counts shows this works alright though
@@ -96,7 +101,9 @@ class ChatGPT:
         if model == "gpt-3.5-turbo":  # note: future models may deviate from this
             num_tokens = 0
             messages_count=self.messages.copy()
-            messages_count.append({"role": "user", "content": msg})
+            # For testing what a new message will add to the count
+            if msg is not None:
+                messages_count.append({"role": "user", "content": msg})
             for message in messages_count:
                 num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
                 for key, value in message.items():
