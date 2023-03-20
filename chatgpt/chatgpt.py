@@ -5,16 +5,19 @@ import json
 import tiktoken
 
 class ChatGPT:
-    def __init__(self, system="", verbose=0, model="gpt-3.5-turbo"):
+
+    def __init__(self, system="", verbose=0, model="gpt-3.5-turbo",num_filter=4097):
         self.system = system
         self.messages = []
         self.message_tokens = [] # token usage of given index
+        self.num_filter=num_filter
 
         self.model=model
         # for some token counting utility
         self.tikmodel=self.model
         if model=="gpt-4":
             self.tikmodel="gpt-3.5-turbo" # until tiktoken works for gpt4
+                                          # it's probably safe to assume the same tokenizer anyways
         self.encoding=tiktoken.encoding_for_model(self.tikmodel)
 
         self.verbose=verbose
@@ -44,7 +47,7 @@ class ChatGPT:
     # this is a private method unless there's some utility I'm missing?
     # Maybe something for UI's idk at the moment
     def __token_trim(self, messages):
-        tot_tokens, msgs_to_use = self.count_tokens(messages,num_filter=512)
+        tot_tokens, msgs_to_use = self.count_tokens(messages)
         print('Sum of tokens: ', tot_tokens)
         return msgs_to_use
 
@@ -62,6 +65,23 @@ class ChatGPT:
         if self.verbose>0:
             print(completion.usage)
         return completion.choices[0].message.content
+    
+    # Because why shouldn't you switch mid-prompt?
+    def set_model(self,model):
+        if self.verbose>0:
+            print('Changing model to: ',model)
+        self.model=model
+
+    # Avoid accessing instance variables
+    def get_model(self):
+        return self.model
+    
+    def clear_messages(self):
+        self.messages=[]
+        
+        if self.system:
+            self.messages.append({"role": "system", "content": self.system})
+            self.message_tokens.append(len(self.encoding.encode(self.system)))
     
     def print_history(self):
         for i,h in enumerate(self.messages):
@@ -88,7 +108,7 @@ class ChatGPT:
     # cool to do. Not going to support get_encoding at this time because
     # I don't want or need it for anything
     # num_filter is used for limiting sent tokens
-    def count_tokens(self, messages=None, model=None, num_filter=4096):
+    def count_tokens(self, messages=None, model=None):
         encoding = self.encoding
         if model is not None:
             encoding = tiktoken.encoding_for_model(model)
@@ -110,7 +130,7 @@ class ChatGPT:
                         tokens_length += -1
 
                 # Count tokens limit, with a 100 tokens margin for the assistant's message and request formatting
-                if num_tokens + tokens_length <= num_filter - 100:
+                if num_tokens + tokens_length <= self.num_filter - 100:
                     num_tokens += tokens_length
                     msgs_to_use.append(message)
                 else:

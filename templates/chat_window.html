@@ -32,13 +32,21 @@
     </div>
   </div>
 
-  <div style="background: rgb(46 73 105)">
+  <div id="input-panel" style="background: rgb(46 73 105)">
   <!-- Chat form -->
     <form id="chat-form">
       <textarea style="max-height: 200px; max-width:800px; height: 100px" id="user-message"></textarea>
       <input type="submit" id="send-btn" value="Send">
     </form>
 
+    <form id="model-selector" >
+      <label for="models">Choose a model:</label>
+      <select name="models" id="models" onchange="setModel()">
+        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        <option value="gpt-4">GPT-4</option>
+        <!-- Add more models -->
+      </select>
+    </form>
   
     <!-- Buttons to save and load chat history -->
     <form method="POST" action="/save_messages" enctype="multipart/form-data">
@@ -50,6 +58,11 @@
       <input type="file" name="file" accept=".json">
       <button type="submit">Load Chat History</button>
     </form>
+
+    <form id="clearForm" method="POST" action="/clear_message">
+      <button type="submit" class="btn btn-danger">Clear Chat History</button>
+    </form>
+    
   </div>
 
 </body>

@@ -57,7 +57,7 @@ body {
   }
 
 #chat-window {
-    height: 550px;
+    height: 525px;
     overflow-y: scroll;
     border: 1px solid #383838;
     padding: 10px;
@@ -126,7 +126,7 @@ body {
 }
 
 .message-row .user-message {
-    background-color: #383838;
+    background-color: #2f496c;
 }
 
 .message-row .chatbot-message {

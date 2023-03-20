@@ -1,10 +1,26 @@
+function setModel() {
+  var dropdown = document.getElementById("models");
+  var selectedModel = dropdown.options[dropdown.selectedIndex].value;
+
+  // AJAX call to server to set the model
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/select_model', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      console.log('Selected model: ' + selectedModel);
+    }
+  };
+  xhr.send(JSON.stringify({model: selectedModel}));
+}
+
 $(document).ready(function() {
 
     // Toggle side panel
     $('#toggle-panel-btn').click(function(){
         $('#side-panel').toggleClass('open');
     });
-    
+
     // Send system prompt to chatbot API
     $('#submit-system-prompt-btn').click(function(e){
         e.preventDefault();
@@ -125,5 +141,25 @@ $(document).ready(function() {
       var minutes = now.getMinutes();
       return hours + ':' + minutes;
     }
+
+    // Clear chat history from screen
+    $('#clearForm').submit(function(event) {
+          event.preventDefault();
+          $.ajax({
+              type: 'POST',
+              url: '/clear_message',
+              success: function(response){
+                if ($('#chat-window').is(':empty')) {
+                    alert('Chat is already cleared.');
+                } else {
+                    $('#chat-window').empty(); // Clear existing messages
+                    alert('Chat history cleared.');
+                }
+            },
+            error: function(error){
+                alert('Error occurred while clearing chat history.');
+            },
+      });
+    });
 
   });

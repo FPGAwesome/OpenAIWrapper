@@ -1,6 +1,6 @@
 # Built on request by chatgpt via the prompt: 
 # "I've built a small API for chatgpt. How can I make a simple front-end interface for chatting?"
-# Because I'm too lazy for writing yet another flask app from scratch. Works... ish, it'll be a to-do
+# At this point, it's a whole lot of me fixing what chatgpt THINKS is proper code though
 
 from flask import Flask,jsonify, render_template, request
 from chatgpt import chatgpt
@@ -51,6 +51,25 @@ def load_messages():
 
     messages = chattest.messages#[{'type': msg.type, 'text': msg.text, 'time': msg.time} for msg in chattest.messages]
     return {'messages': messages}
+
+# Route that wipes messages from screen and history
+# Should protect this with an alert/confirmation prompt
+@app.route('/clear_message', methods=['POST'])
+def clear_messages():
+    chattest.clear_messages()
+
+    return render_template('chat_window.html')
+
+# Flask route to handle model selection
+@app.route('/select_model', methods=['POST'])
+def select_model():
+    data = request.json
+    selected_model = data['model']
+    
+    # Call your set_model function with the selected model
+    chattest.set_model(selected_model)
+
+    return render_template('chat_window.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
